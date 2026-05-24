@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Budget Control</title>
+<style src="style.css"></style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        <h2>Budget Control</h2>
+    </div>
+</header>
+
+<main>
+
+<div id="balance">
+    <h1 id="balance-val">Ваш Баланс: 0</h1>
+
+    <div id="stats">
+        <div class="card">
+            <h3>Доходи</h3>
+            <p id="income">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Витрати</h3>
+            <p id="expense">0</p>
+        </div>
+    </div>
+</div>
+
+<div id="operation-select">
+    <p>Додати операцію</p>
+    <input id="operation-name" placeholder="Назва">
+    <input id="operation-amount" type="number" placeholder="Сума">
+    <button id="operation-add">Додати</button>
+</div>
+
+<div id="operations-history">
+    <p>Історія операцій</p>
+    <ul id="history"></ul>
+</div>
+
+</main>
+
+<script src="script.js"></script>
+
+</body>
+</html>
