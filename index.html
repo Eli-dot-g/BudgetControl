@@ -13,10 +13,11 @@
 
 body {
     font-family: Arial, sans-serif;
-    background: #f5f7fb;
+    background: linear-gradient(135deg, #eef2f7, #f7f9fc);
     color: #222;
 }
 
+/* HEADER */
 header {
     background: white;
     padding: 20px;
@@ -27,69 +28,67 @@ header {
     text-align: center;
 }
 
+/* LAYOUT */
 main {
-    max-width: 600px;
+    max-width: 650px;
     margin: 40px auto;
     padding: 20px;
 }
 
+/* BALANCE */
 #balance {
     background: white;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 30px;
     text-align: center;
     margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 #balance h1 {
     font-size: 32px;
 }
 
+/* STATS */
 #stats {
     display: flex;
-    justify-content: space-between;
     gap: 15px;
-    margin: 20px 0;
+    margin-top: 20px;
 }
 
 .card {
     flex: 1;
-    background: white;
+    background: #fafafa;
     padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 14px;
     text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .card h3 {
-    font-size: 14px;
+    font-size: 13px;
     color: #777;
 }
 
 .card p {
     font-size: 20px;
-    margin-top: 5px;
     font-weight: bold;
+    margin-top: 5px;
 }
 
-.income {
-    color: #2ecc71;
-}
+.income { color: #2ecc71; }
+.expense { color: #e74c3c; }
 
-.expense {
-    color: #e74c3c;
-}
-
+/* INPUT */
 #operation-select {
     background: white;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 #operation-select input {
@@ -111,22 +110,24 @@ main {
 }
 
 #operation-add:hover {
-    background: #43a047;
+    background: #3fa043;
 }
 
+/* HISTORY */
 #operations-history {
     background: white;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 #operations-history p {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 15px;
 }
 
+/* LIST */
 ul {
     list-style: none;
 }
@@ -134,8 +135,35 @@ ul {
 li {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
+    align-items: center;
+    padding: 12px;
     border-bottom: 1px solid #eee;
+}
+
+/* DELETE BUTTON */
+button.delete {
+    background: #ff4d4d;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button.delete:hover {
+    background: #e60000;
+}
+
+/* TAG */
+.tag-income {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.tag-expense {
+    color: #e74c3c;
+    font-weight: bold;
 }
 </style>
 
@@ -152,23 +180,22 @@ li {
 <main>
 <h1>LocalStroge немає, нажміть F5 щоб передати кошти державі (витрати теж💞)</h1>
 <div id="balance">
-    <h1 id="balance-val">Ваш Баланс: 0</h1>
+    <h1 id="balance-val">Баланс: 0</h1>
 
     <div id="stats">
         <div class="card">
             <h3>Доходи</h3>
-            <p id="income">0</p>
+            <p id="income" class="income">0</p>
         </div>
 
         <div class="card">
             <h3>Витрати</h3>
-            <p id="expense">0</p>
+            <p id="expense" class="expense">0</p>
         </div>
     </div>
 </div>
 
 <div id="operation-select">
-    <p>Додати операцію</p>
     <input id="operation-name" placeholder="Назва">
     <input id="operation-amount" type="number" placeholder="Сума">
     <button id="operation-add">Додати</button>
@@ -182,44 +209,78 @@ li {
 </main>
 
 <script>
-let balance = 0;
-let income = 0;
-let expense = 0;
+let operations = JSON.parse(localStorage.getItem("ops")) || [];
+
+function save() {
+    localStorage.setItem("ops", JSON.stringify(operations));
+}
+
+function render() {
+    let list = document.getElementById("history");
+    list.innerHTML = "";
+
+    let balance = 0;
+    let income = 0;
+    let expense = 0;
+
+    operations.forEach(op => {
+
+        let amount = Number(op.amount);
+
+        balance += amount;
+
+        if (amount > 0) income += amount;
+        else expense += Math.abs(amount);
+
+        list.innerHTML += `
+            <li>
+                <span>
+                    ${op.name}
+                    <span class="${amount > 0 ? 'tag-income' : 'tag-expense'}">
+                        ${amount}
+                    </span>
+                </span>
+
+                <button class="delete" onclick="removeOperation(${op.id})">X</button>
+            </li>
+        `;
+    });
+
+    document.getElementById('balance-val').innerHTML = "Баланс: " + balance;
+    document.getElementById('income').innerHTML = income;
+    document.getElementById('expense').innerHTML = expense;
+}
+
+function removeOperation(id) {
+    operations = operations.filter(op => op.id !== id);
+    save();
+    render();
+}
 
 document.getElementById('operation-add').addEventListener('click', () => {
 
     let name = document.getElementById('operation-name').value;
-    let amount = parseInt(document.getElementById('operation-amount').value);
+    let amount = document.getElementById('operation-amount').value;
 
-    if (isNaN(amount) || name === "") {
-        alert("Заповни поля");
+    if (!name || !amount) {
+        alert("Введіть дані");
         return;
     }
 
-    balance += amount;
+    operations.push({
+        id: Date.now(),
+        name,
+        amount
+    });
 
-    if (amount > 0) {
-        income += amount;
-    } else {
-        expense += Math.abs(amount);
-    }
-
-    document.getElementById('balance-val').innerHTML = "Ваш Баланс: " + balance;
-    document.getElementById('income').innerHTML = income;
-    document.getElementById('expense').innerHTML = expense;
-
-    document.getElementById('history').innerHTML += `
-        <li>
-            ${name}
-            <div class="${amount > 0 ? 'income' : 'expense'}">
-                ${amount}
-            </div>
-        </li>
-    `;
+    save();
+    render();
 
     document.getElementById('operation-name').value = "";
     document.getElementById('operation-amount').value = "";
 });
+
+render();
 </script>
 
 </body>
