@@ -3,7 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <title>Budget Control</title>
-<style src="style.css"></style>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #eef2f7, #f7f9fc);
+    color: #222;
+}
+
+/* HEADER */
+header {
+    background: white;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.logo {
+    text-align: center;
+}
+
+/* LAYOUT */
+main {
+    max-width: 650px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+/* BALANCE */
+#balance {
+    background: white;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+#balance h1 {
+    font-size: 32px;
+}
+
+/* STATS */
+#stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.card {
+    flex: 1;
+    background: #fafafa;
+    padding: 15px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+    font-size: 13px;
+    color: #777;
+}
+
+.card p {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.income { color: #2ecc71; }
+.expense { color: #e74c3c; }
+
+/* INPUT */
+#operation-select {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+#operation-select input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+#operation-add {
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #4CAF50;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#operation-add:hover {
+    background: #3fa043;
+}
+
+/* HISTORY */
+#operations-history {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+#operations-history p {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* LIST */
+ul {
+    list-style: none;
+}
+
+li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* DELETE BUTTON */
+button.delete {
+    background: #ff4d4d;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button.delete:hover {
+    background: #e60000;
+}
+
+/* TAG */
+.tag-income {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.tag-expense {
+    color: #e74c3c;
+    font-weight: bold;
+}
+</style>
+
 </head>
 
 <body>
@@ -15,25 +178,24 @@
 </header>
 
 <main>
-
+<h1>LocalStroge немає, нажміть F5 щоб передати кошти державі (витрати теж💞)</h1>
 <div id="balance">
-    <h1 id="balance-val">Ваш Баланс: 0</h1>
+    <h1 id="balance-val">Баланс: 0</h1>
 
     <div id="stats">
         <div class="card">
             <h3>Доходи</h3>
-            <p id="income">0</p>
+            <p id="income" class="income">0</p>
         </div>
 
         <div class="card">
             <h3>Витрати</h3>
-            <p id="expense">0</p>
+            <p id="expense" class="expense">0</p>
         </div>
     </div>
 </div>
 
 <div id="operation-select">
-    <p>Додати операцію</p>
     <input id="operation-name" placeholder="Назва">
     <input id="operation-amount" type="number" placeholder="Сума">
     <button id="operation-add">Додати</button>
@@ -46,7 +208,80 @@
 
 </main>
 
-<script src="script.js"></script>
+<script>
+let operations = JSON.parse(localStorage.getItem("ops")) || [];
+
+function save() {
+    localStorage.setItem("ops", JSON.stringify(operations));
+}
+
+function render() {
+    let list = document.getElementById("history");
+    list.innerHTML = "";
+
+    let balance = 0;
+    let income = 0;
+    let expense = 0;
+
+    operations.forEach(op => {
+
+        let amount = Number(op.amount);
+
+        balance += amount;
+
+        if (amount > 0) income += amount;
+        else expense += Math.abs(amount);
+
+        list.innerHTML += `
+            <li>
+                <span>
+                    ${op.name}
+                    <span class="${amount > 0 ? 'tag-income' : 'tag-expense'}">
+                        ${amount}
+                    </span>
+                </span>
+
+                <button class="delete" onclick="removeOperation(${op.id})">X</button>
+            </li>
+        `;
+    });
+
+    document.getElementById('balance-val').innerHTML = "Баланс: " + balance;
+    document.getElementById('income').innerHTML = income;
+    document.getElementById('expense').innerHTML = expense;
+}
+
+function removeOperation(id) {
+    operations = operations.filter(op => op.id !== id);
+    save();
+    render();
+}
+
+document.getElementById('operation-add').addEventListener('click', () => {
+
+    let name = document.getElementById('operation-name').value;
+    let amount = document.getElementById('operation-amount').value;
+
+    if (!name || !amount) {
+        alert("Введіть дані");
+        return;
+    }
+
+    operations.push({
+        id: Date.now(),
+        name,
+        amount
+    });
+
+    save();
+    render();
+
+    document.getElementById('operation-name').value = "";
+    document.getElementById('operation-amount').value = "";
+});
+
+render();
+</script>
 
 </body>
 </html>
